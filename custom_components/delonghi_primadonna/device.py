@@ -285,6 +285,8 @@ class DelongiPrimadonna:
         _LOGGER.info('Event triggered: %s', event_data)
 
     async def _handle_data(self, sender, value):
+        global value_counter
+        global value_temp
         value_counter += 1
         if value_temp == '':
             value_temp = value
