@@ -284,6 +284,7 @@ class DelongiPrimadonna:
         _LOGGER.info('Event triggered: %s', event_data)
 
     async def _handle_data(self, sender, value):
+        _LOGGER.info('len: %s , value: %s , hex: %s', len(value), value, hexlify(value, ' '))
         if len(value) > 9:
             self.switches.is_on = value[9] > 0
         if len(value) > 4:
