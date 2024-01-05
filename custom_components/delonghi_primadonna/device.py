@@ -26,7 +26,8 @@ from .const import (AMERICANO_OFF, AMERICANO_ON, BASE_COMMAND,
                     WATER_SHORTAGE, WATER_TANK_DETACHED)
 
 _LOGGER = logging.getLogger(__name__)
-
+value_temp = ''
+value_counter = 0
 
 class BeverageEntityFeature(IntFlag):
     """Supported features of the beverage entity"""
@@ -284,19 +285,28 @@ class DelongiPrimadonna:
         _LOGGER.info('Event triggered: %s', event_data)
 
     async def _handle_data(self, sender, value):
-        _LOGGER.info('len: %s , value: %s , hex: %s', len(value), value, hexlify(value, ' '))
-        if len(value) > 9:
-            self.switches.is_on = value[9] > 0
-        if len(value) > 4:
-            self.steam_nozzle = NOZZLE_STATE.get(value[4], value[4])
-        if len(value) > 7:
-            self.service = value[7]
-        if len(value) > 5:
-            self.status = DEVICE_STATUS.get(value[5], DEVICE_STATUS.get(5))
-        if self._device_status != hexlify(value, ' '):
-            _LOGGER.info('Received data: %s from %s', hexlify(value, ' '), sender)  # noqa: E501
-            await self._event_trigger(value)
-        self._device_status = hexlify(value, ' ')
+        value_counter += 1
+        if value_temp == '':
+            value_temp = value
+        else:
+            value_temp = value_temp + value
+        if value_counter == 5:
+            value = value_temp
+            value_temp = ''
+            value_counter = 0
+            _LOGGER.info('len: %s , value: %s , hex: %s', len(value), value, hexlify(value, ' '))
+            if len(value) > 9:
+                self.switches.is_on = value[9] > 0
+            if len(value) > 4:
+                self.steam_nozzle = NOZZLE_STATE.get(value[4], value[4])
+            if len(value) > 7:
+                self.service = value[7]
+            if len(value) > 5:
+                self.status = DEVICE_STATUS.get(value[5], DEVICE_STATUS.get(5))
+            if self._device_status != hexlify(value, ' '):
+                _LOGGER.info('Received data: %s from %s', hexlify(value, ' '), sender)  # noqa: E501
+                await self._event_trigger(value)
+            self._device_status = hexlify(value, ' ')
 
     async def power_on(self) -> None:
         """Turn the device on."""
